@@ -69,6 +69,7 @@ extension AVPlayerEngine {
     }
     
     @objc func onAccessLogEntryNotification(notification: Notification) {
+        print("\n\nRGLOG::AVPlayerEngine::onAccessLogEntryNotification::\(notification)\n\n");
         if let playerItem = notification.object as? AVPlayerItem, let accessLog = playerItem.accessLog(),
             let lastEvent = accessLog.events.last, playerItem === self.currentItem {
             if #available(iOS 10.0, tvOS 10.0, *) {
@@ -84,6 +85,7 @@ extension AVPlayerEngine {
     }
     
     @objc func onErrorLogEntryNotification(notification: Notification) {
+        print("\n\nRGLOG::AVPlayerEngine::onErrorLogEntryNotification::\(notification)\n\n");
         guard let playerItem = notification.object as? AVPlayerItem,
             let errorLog = playerItem.errorLog(),
             let lastEvent = errorLog.events.last,
@@ -94,6 +96,7 @@ extension AVPlayerEngine {
     
     @objc func onPlaybackStalledNotification(notification: Notification) {
         // post notification only for current player item.
+        print("\n\nRGLOG::AVPlayerEngine::onPlaybackStalledNotification::\(notification)\n\n");
         guard let notificationObject = notification.object as? AVPlayerItem, notificationObject === self.currentItem else { return }
         
         self.post(event: PlayerEvent.PlaybackStalled())
@@ -101,6 +104,7 @@ extension AVPlayerEngine {
     
     @objc func didFailToPlayToEndTime(_ notification: NSNotification) {
         // post notification only for current player item.
+        print("\n\nRGLOG::AVPlayerEngine::didFailToPlayToEndTime::\(notification)\n\n");
         guard let notificationObject = notification.object as? AVPlayerItem, notificationObject === self.currentItem else { return }
         let newState = PlayerState.error
         self.postStateChange(newState: newState, oldState: self.currentState)
@@ -115,6 +119,7 @@ extension AVPlayerEngine {
     
     @objc func didPlayToEndTime(_ notification: NSNotification) {
         // post notification only for current player item.
+        print("\n\nRGLOG::AVPlayerEngine::didPlayToEndTime::\(notification)\n\n");
         guard let notificationObject = notification.object as? AVPlayerItem, notificationObject === self.currentItem else { return }
         let newState = PlayerState.ended
         self.postStateChange(newState: newState, oldState: self.currentState)
@@ -127,6 +132,8 @@ extension AVPlayerEngine {
     }
     
     override public func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
+        print("\n\nRGLOG::AVPlayerEngine::observeValue(forKeyPath::\(String(describing: keyPath)), change - \(String(describing: change))\n\n");
+//        print("\n\nRGLOG::AVPlayerEngine:: observation:: isReadyToDisplay:: \(self.playerLayer?.isReadyForDisplay), videoRect:: \(self.playerLayer?.videoRect), currentItemAsset : \(self.currentItem?.asset)\n\n\n");
         PKLog.verbose("observeValue:: onEvent/onState")
         
         guard context == &AVPlayerEngine.observerContext else {
@@ -203,6 +210,7 @@ extension AVPlayerEngine {
     
     /// Handles changes in player timebase
     @objc func timebaseChanged(notification: Notification) {
+        print("\n\nRGLOG::AVPlayerEngine::timebaseChanged::\(notification)\n\n");
         // For some reason timebase rate changed is received on a background thread.
         // in order to check self.rate we must make sure we are on the main thread.
         DispatchQueue.main.async {
@@ -363,6 +371,7 @@ extension AVPlayerEngine {
     func handleDurationChanged() {
         if let duration = self.currentItem?.duration, !CMTIME_IS_INDEFINITE(duration) {
             PKLog.debug("Duration in seconds: \(CMTimeGetSeconds(duration))")
+            print("\n\nRGLOG::Duration in seconds: \(CMTimeGetSeconds(duration)) \n\n\n");
             internalDuration = CMTimeGetSeconds(duration)
         }
     }

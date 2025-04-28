@@ -73,6 +73,7 @@ public class AVPlayerEngine: AVPlayer {
                                              changeHandler: { [weak self] (object, change) in
                                                 guard let self = self else { return }
                                                 guard let asset = self.asset else { return }
+                print("\n\nRGLOG::AVPlayerEngine::didSetAsset:: The asset status changed to: \(asset.status) \n\n\(print(Thread.callStackSymbols.forEach{print($0)}))\n\n\n");
                                                 PKLog.debug("The asset status changed to: \(asset.status)")
                                                 if asset.status == .prepared, self.shouldStartBuffering == true {
                                                     self.initializePlayerItem(asset)
@@ -117,6 +118,7 @@ public class AVPlayerEngine: AVPlayer {
             return time.isNaN ? 0 : time
         }
         set {
+            print("\n\nRGLOG::AVPlayerEngine::setCurrentPosition:: \(print(Thread.callStackSymbols.forEach{print($0)}))\n\n\n");
             if newValue.isNaN { return }
             if newValue.isEqual(to: self.currentPosition) { return }
             let duration = self.duration
@@ -139,6 +141,8 @@ public class AVPlayerEngine: AVPlayer {
     var startPosition: TimeInterval {
         didSet {
             PKLog.debug("set startPosition: \(startPosition)")
+            print("\n\n\(type(of:self))::setStartPosition - \(startPosition)\n\n")
+
         }
     }
     
@@ -148,7 +152,7 @@ public class AVPlayerEngine: AVPlayer {
         var result = CMTimeGetSeconds(currentItem.duration)
         
         // This checks if the duration equals `kCMTimeIndefinite` which indicates this is a live stream.
-        // Using the last range duration gives us the live window duration. 
+        // Using the last range duration gives us the live window duration.
         // For example a duration of 120seconds means we can seek up to 120 seconds from live playhead.
         if CMTIME_IS_INDEFINITE(currentItem.duration) {
             let seekableRanges = currentItem.seekableTimeRanges
@@ -167,6 +171,7 @@ public class AVPlayerEngine: AVPlayer {
     
     var isPlaying: Bool {
         guard let currentItem = self.currentItem else {
+            print("\n\n\(type(of:self))::isPlaying::current item is empty\n\n")
             PKLog.error("current item is empty")
             return false
         }
@@ -201,6 +206,7 @@ public class AVPlayerEngine: AVPlayer {
     /// This helps calculate `currentTime` and `duration` for live streams.
     private var rangeStart: CMTime {
         get {
+//            print("\n\nRGLOG::AVPlayerEngine::getRangeStart:: \(print(Thread.callStackSymbols.forEach{print($0)}))\n\n\n");
             var result: CMTime = CMTimeMakeWithSeconds(0, preferredTimescale: 1)
             if let currentItem = self.currentItem {
                 let seekableRanges = currentItem.seekableTimeRanges
@@ -214,6 +220,24 @@ public class AVPlayerEngine: AVPlayer {
             }
             return result
         }
+    }
+    
+    private func shouldReIntializePlayer()-> Bool{
+        if let currentItem = self.currentItem {
+            let seekableRanges = currentItem.seekableTimeRanges
+            if seekableRanges.count > 0 {
+                if let lastSeekableTimeRange = seekableRanges.last as? CMTimeRange, lastSeekableTimeRange.isValid {
+                    return false
+                } else {
+                    if let isReadyForDisplay = playerLayer?.isReadyForDisplay, isReadyForDisplay{
+                        return false
+                    } else{
+                        return true
+                    }
+                }
+            }
+        }
+        return false
     }
     
     public override var rate: Float {
@@ -258,6 +282,7 @@ public class AVPlayerEngine: AVPlayer {
     }
     
     public func stop() {
+        print("\n\nRGLOG::AVPlayerEngine::Stop player:: \(print(Thread.callStackSymbols.forEach{print($0)}))\n\n\n");
         PKLog.verbose("Stop player")
         self.pause()
         self.seek(to: CMTime.zero)
@@ -267,6 +292,7 @@ public class AVPlayerEngine: AVPlayer {
     }
     
     public func replay() {
+        print("\n\nRGLOG::AVPlayerEngine::Replay:: \(print(Thread.callStackSymbols.forEach{print($0)}))\n\n\n");
         PKLog.verbose("Replay item in player")
         self.pause()
         self.seek(to: CMTime.zero)
@@ -275,6 +301,7 @@ public class AVPlayerEngine: AVPlayer {
     }
     
     override public func pause() {
+        print("\n\nRGLOG::AVPlayerEngine::Pause:: \(print(Thread.callStackSymbols.forEach{print($0)}))\n\n\n");
         if self.rate > 0 {
             // Playing, so pause.
             PKLog.debug("Pause player")
@@ -283,6 +310,7 @@ public class AVPlayerEngine: AVPlayer {
     }
     
     override public func play() {
+        print("\n\nRGLOG::AVPlayerEngine::Play:: \(print(Thread.callStackSymbols.forEach{print($0)}))\n\n\n");
         if self.rate == 0 {
             PKLog.debug("Play player")
             self.post(event: PlayerEvent.Play())
@@ -292,15 +320,22 @@ public class AVPlayerEngine: AVPlayer {
     
     @available(iOS 10.0, tvOS 10.0,  *)
     override public func playImmediately(atRate rate: Float) {
-        if self.rate == 0 {
-            PKLog.debug("Play immediately player")
-            self.post(event: PlayerEvent.Play())
-            
-            super.playImmediately(atRate: rate)
+        if shouldReIntializePlayer(){
+            print("n\nRGLOG::AVPlayerEngine::Play immediately:: please reitializePlayer)\n\n\n")
+            self.post(event: PlayerEvent.NeedsRepreparePlayer())
+        } else{
+            if self.rate == 0{
+                PKLog.debug("Play immediately player")
+                self.post(event: PlayerEvent.Play())
+                super.playImmediately(atRate: rate)
+                //            print("\n\nRGLOG::AVPlayerEngine::Post Play immediately:: isReadyToDisplay:: \(self.playerLayer?.isReadyForDisplay), videoRect:: \(self.playerLayer?.videoRect), currentItemAsset : \(self.currentItem?.asset)\n\n\n");
+            }
         }
     }
     
     func seekToLiveEdge() {
+        print("\n\nRGLOG::AVPlayerEngine::seekToLiveEdge \n\n\(print(Thread.callStackSymbols.forEach{print($0)}))\n\n\n");
+        
         guard let currentItem = self.currentItem else {
             seekToLiveEdgeTriggered = true
             PKLog.error("Current item is empty, postpond seek to live edge.")
@@ -333,12 +368,14 @@ public class AVPlayerEngine: AVPlayer {
     }
     
     func playFromLiveEdge() {
+        print("\n\nRGLOG::AVPlayerEngine::playFromLiveEdge:: \(print(Thread.callStackSymbols.forEach{print($0)}))\n\n\n");
         seekToLiveEdge()
         self.play()
     }
     
     @available(iOS 10.0, tvOS 10.0, *)
     func playFromLiveEdgeImmediately(atRate rate: Float) {
+        print("\n\nRGLOG::AVPlayerEngine::playFromLiveEdgeImmediately:: \(print(Thread.callStackSymbols.forEach{print($0)}))\n\n\n");
         seekToLiveEdge()
         self.playImmediately(atRate: rate)
     }
@@ -477,3 +514,4 @@ extension AVPlayerEngine: AppStateObservable {
         }
     }
 }
+
