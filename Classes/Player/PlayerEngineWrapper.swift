@@ -121,10 +121,12 @@ public class PlayerEngineWrapper: NSObject, PlayerEngine {
     }
     
     public func loadMedia(from mediaSource: PKMediaSource?, mediaAsset: AVURLAsset? = nil, handler: AssetHandler) {
+        print("\n\n\(type(of:self))::loadMedia::mediaSource - \(String(describing: mediaSource))::mediaAsset - \(String(describing: mediaAsset))::handler - \(handler)\n\n")
         playerEngine?.loadMedia(from: mediaSource, mediaAsset: mediaAsset, handler: handler)
     }
     
     public func playFromLiveEdge() {
+        print("\n\n\(type(of:self))::playFromLiveEdge::callStack - \(Thread.callStackSymbols.forEach{print($0)})\n\n")
         playerEngine?.playFromLiveEdge()
     }
     
@@ -153,6 +155,7 @@ public class PlayerEngineWrapper: NSObject, PlayerEngine {
     }
     
     public func seek(to time: TimeInterval) {
+        print("\n\n\(type(of:self))::seekTo::time - \(time)\n\n")
         playerEngine?.seek(to: time)
     }
     
@@ -161,14 +164,17 @@ public class PlayerEngineWrapper: NSObject, PlayerEngine {
     }
     
     public func destroy() {
+        print("\n\n\(type(of:self))::destroy::callStack - \(Thread.callStackSymbols.forEach{print($0)})\n\n")
         playerEngine?.destroy()
     }
     
     public func prepare(_ config: MediaConfig, mediaAsset: AVURLAsset? = nil) {
+        print("\n\n\(type(of:self))::prepare::config - \(config)::mediaAsset - \(String(describing: mediaAsset))\n\n")
         playerEngine?.prepare(config, mediaAsset: mediaAsset)
     }
     
     public func startBuffering() {
+        print("\n\n\(type(of:self))::startBuffering::callStack - \(Thread.callStackSymbols.forEach{print($0)})\n\n")
         playerEngine?.startBuffering()
     }
 }
