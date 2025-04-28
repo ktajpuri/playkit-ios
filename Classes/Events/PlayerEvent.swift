@@ -17,7 +17,7 @@ import AVFoundation
     @objc public static let allEventTypes: [PlayerEvent.Type] = [
         canPlay, durationChanged, stopped, ended, loadedMetadata, play, pause, playing, seeking, seeked, replay,
         tracksAvailable, textTrackChanged, audioTrackChanged, videoTrackChanged, playbackInfo, stateChanged,
-        timedMetadata, sourceSelected, loadedTimeRanges, playheadUpdate, error, errorLog, playbackStalled
+        timedMetadata, sourceSelected, loadedTimeRanges, playheadUpdate, error, errorLog, playbackStalled, needsRepreparePlayer
     ]
     
     // MARK: - Player Events Static Reference
@@ -72,6 +72,9 @@ import AVFoundation
     /// Sent when the player has stalled. Buffering with no available data to play.
     @objc public static let playbackStalled: PlayerEvent.Type = PlaybackStalled.self
     
+    /// Sent when AVPlayer is waiting with no item to play. Attempting to re-prepare stream
+    @objc public static let needsRepreparePlayer: PlayerEvent.Type = NeedsRepreparePlayer.self
+    
     // MARK: - Player Basic Events
 
     public class CanPlay: PlayerEvent {}
@@ -87,6 +90,7 @@ import AVFoundation
     public class Play: PlayerEvent {}
     public class Pause: PlayerEvent {}
     public class Playing: PlayerEvent {}
+    public class NeedsRepreparePlayer: PlayerEvent {}
     
     public class Seeking: PlayerEvent {
         convenience init(targetSeekPosition: TimeInterval) {

@@ -1,7 +1,7 @@
 // ===================================================================================================
 // Copyright (C) 2017 Kaltura Inc.
 //
-// Licensed under the AGPLv3 license, unless a different license for a 
+// Licensed under the AGPLv3 license, unless a different license for a
 // particular library is specified in the applicable library path.
 //
 // You may obtain a copy of the License at
@@ -171,12 +171,18 @@ class PlayerController: NSObject, Player {
     
     public weak var view: PlayerView? {
         get { return self.currentPlayer.view }
-        set { self.currentPlayer.view = newValue }
+        set {
+            print("\n\n\(type(of:self))::setView - \(String(describing: view))\n\n")
+            self.currentPlayer.view = newValue
+        }
     }
 
     public var assetToPrepare: AVURLAsset? {
         get { return self.currentPlayer.assetToPrepare }
-        set { self.currentPlayer.assetToPrepare = newValue }
+        set {
+            print("\n\n\(type(of:self))::setAssetToPrepare - \(String(describing: newValue))\n\n")
+            self.currentPlayer.assetToPrepare = newValue
+        }
     }
     
     public var currentTime: TimeInterval {
@@ -189,6 +195,7 @@ class PlayerController: NSObject, Player {
             return position
         }
         set {
+            print("\n\n\(type(of:self))::setCurrentTime - \(String(describing: newValue))\n\n")
             self.seek(to: newValue)
         }
     }
@@ -238,6 +245,7 @@ class PlayerController: NSObject, Player {
     }
     
     func play() {
+        print("\n\n\(type(of:self))::play::mediaEntry - \(String(describing: self.mediaEntry)) :: mediaType - \(String(describing: self.mediaEntry?.mediaType))\n\n")
         guard let mediaEntry = self.mediaEntry else {
             currentPlayer.play()
             return
@@ -252,12 +260,15 @@ class PlayerController: NSObject, Player {
             } else {
                 currentPlayer.play()
             }
+        case .vod:
+            currentPlayer.playFromLiveEdge()
         default:
             currentPlayer.play()
         }
     }
     
     func pause() {
+        print("\n\n\(type(of:self))::pause::mediaEntry - \(String(describing: self.mediaEntry)) :: mediaType - \(String(describing: self.mediaEntry?.mediaType))\n\n")
         // Save the paused position only if the player is playing, not every time the pause is called.
         if mediaEntry?.mediaType == .dvrLive, currentPlayer.isPlaying {
             liveDVRPausedPosition = PausePosition(currentTime)
@@ -267,6 +278,7 @@ class PlayerController: NSObject, Player {
     }
     
     func resume() {
+        print("\n\n\(type(of:self))::resume::mediaEntry - \(String(describing: self.mediaEntry)) :: mediaType - \(String(describing: self.mediaEntry?.mediaType))\n\n")
         guard let mediaEntry = self.mediaEntry else {
             currentPlayer.resume()
             return
@@ -287,14 +299,17 @@ class PlayerController: NSObject, Player {
     }
     
     func stop() {
+        print("\n\n\(type(of:self))::stop::mediaEntry - \(String(describing: self.mediaEntry)) :: mediaType - \(String(describing: self.mediaEntry?.mediaType))\n\n")
         self.currentPlayer.stop()
     }
     
     func replay() {
+        print("\n\n\(type(of:self))::replay::mediaEntry - \(String(describing: self.mediaEntry)) :: mediaType - \(String(describing: self.mediaEntry?.mediaType))\n\n")
         self.currentPlayer.replay()
     }
     
     func seek(to time: TimeInterval) {
+        print("\n\n\(type(of:self))::seekTo::mediaEntry - \(String(describing: self.mediaEntry)) :: mediaType - \(String(describing: self.mediaEntry?.mediaType))\n\n")
         self.currentPlayer.currentPosition = time
     }
     
@@ -314,6 +329,8 @@ class PlayerController: NSObject, Player {
     func prepare(_ mediaConfig: MediaConfig, mediaAsset: AVURLAsset? = nil) {
         self.currentPlayer.prepare(mediaConfig, mediaAsset: mediaAsset)
         
+        print("\n\n\(type(of:self))::prepare::mediaEntry - \(String(describing: self.mediaEntry)) :: mediaType - \(String(describing: self.mediaEntry?.mediaType))\n\n")
+
         if let source = self.selectedSource {
             self.mediaFormat = source.mediaFormat
         }
